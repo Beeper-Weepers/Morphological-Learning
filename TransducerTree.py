@@ -61,37 +61,38 @@ class Transducer:
         self.depth = max(self.depth, currentDepth)
 
     def meaningPush(self, node, meaning):
-        # TODO: Tuples are immutable, transition to lists in functions
-
         # Find function leading to cur. node, then assign cur. meaning to it
         for f in node.parent.functions:
             if f[2] == node:
                 f[1] = meaning
-                print('bob')
 
-        # Construction of meaning list
-        lst = []
-        for f in node.parent.functions:
-            lst.append(set(f[1]))
-
-        # TODO: WRITE MORE EFFICIENT FUNCTION TO FIND INTERSEC.S & REMOVE
-
-        # Find intersection
-        sect = list(lst.pop(0).intersection(*lst))
-
-        # Remove intersections from functions
-        for i in sect:
+        if node.parent.parent is not None:
+            # Construction of meaning list
+            lst = []
             for f in node.parent.functions:
-                f[1].remove(i)
+                lst.append(set(f[1]))
 
-        # Adding the intersection to the meaning, which is propogated downwards
-        meaning = sect
+            # Find intersection
+            sect = list(lst.pop(0).intersection(*lst))
 
-        # If commonality has something in it, keep propogating
-        if meaning and node.parent.parent is not None:
-            self.meaningPush(node.parent, meaning)
-        else:
-            print(meaning)
+            # Remove intersections from functions
+            for i in sect:
+                for f in node.parent.functions:
+                    f[1].remove(i)
+
+            # Adding the intersection to the meaning, which is prop.ed downward
+            meaning = sect
+
+            '''print(*meaning)
+            print("_____")
+            print(*sect)'''
+
+            # If commonality has something in it, keep propogating
+            if meaning:
+                if node.depth == 1:
+                    print("HEYOOOOOO MOTHAFUCKA")
+                    print(*meaning)
+                self.meaningPush(node.parent, meaning)
 
     def quasiDetermine(self):
         # Sort the leaves into depth-decreasing order
@@ -99,4 +100,4 @@ class Transducer:
 
         # Propogate meanings down
         for l in self.leaves:
-            self.meaningPush(l[2].parent, l[1])
+            self.meaningPush(l[2], l[1])

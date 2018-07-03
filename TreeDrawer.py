@@ -3,8 +3,8 @@ import math
 
 
 class TreeDrawer:
-    w = 800
-    h = 600
+    w = 1024
+    h = 768
     r = 16
     xl = 64  # Stands for X length
     yl = 156  # Stands for Y length
@@ -68,7 +68,7 @@ class TreeDrawer:
                                         text=f[0]+":"+';'.join(f[1]),
                                         anchor="nw")
             else:
-                self.canvas.create_text(xC + 6, yC - 4,
+                self.canvas.create_text(xC + 6, yC - 8,
                                         text=f[0]+":"+';'.join(f[1]),
                                         anchor="w")
 

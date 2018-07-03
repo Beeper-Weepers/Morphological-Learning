@@ -1,5 +1,6 @@
-xyzew	PRES-PROG;SG;1ST
-yzew	PRES-PROG;SG;2ND
-xyz	PRES-PROG;SG;3RD
-zy	PRES-PROG;PL;1ST
-x	PRES-PROG;PL;2ND
+oluyorum	PP;1ST;SG
+oluyoruz	PP;1ST;PL
+oluyorsun	PP;2ND;SG
+oluyorsunuz	PP;2ND;PL
+oluyor	PP;3RD;SG
+oluyorlar	PP;3RD;PL
