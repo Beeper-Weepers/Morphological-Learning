@@ -1,9 +1,11 @@
 class Node:
 
-    def __init__(self, par, depth):
+    def __init__(self, par, depth, name):
         self.parent = par
         self.functions = []  # Consists of tuple (morph, meaning, node)
+        # TODO: NOW THAT WE HAVE GRAPHVIZ, DEPTH IS OBSOLETE
         self.depth = depth
+        self.name = name
 
     def addFunction(self, morph, meaning, n):
         self.functions.append([morph, meaning, n])
@@ -22,8 +24,10 @@ class Transducer:
     def __init__(self):
         self.leaves = []
         self.branches = []
-        self.root = Node(None, 0)
         self.depth = 0
+        self.count = 0
+        self.root = Node(None, 0, str(self.count))
+        self.count += 1  # For the root node
 
     def findMatchingNode(self, morpheme, list):
         for i in range(0, len(list)):
@@ -42,7 +46,8 @@ class Transducer:
             matchingNode = self.findMatchingNode(p, childrenList)
             # Create a new node
             if matchingNode is None:
-                nde = Node(prevNode, currentDepth)
+                nde = Node(prevNode, currentDepth, str(self.count))
+                self.count += 1
                 prevNode.addFunction(p, [], nde)
                 prevNode = nde
                 childrenList = prevNode.functions
@@ -53,12 +58,15 @@ class Transducer:
             currentDepth += 1
 
         # Last Node Meaning Tack-On
-        nde = Node(prevNode, currentDepth)
+        nde = Node(prevNode, currentDepth, str(self.count))
+        self.count += 1
         prevNode.addFunction("", meaning.split(";"), nde)
         self.leaves.append(prevNode.getRecFunc())
         self.branches.append(prevNode)
 
         self.depth = max(self.depth, currentDepth)
+
+    # Quasi-Determination Related
 
     def meaningPush(self, node, meaning):
         # Find function leading to cur. node, then assign cur. meaning to it
@@ -83,15 +91,8 @@ class Transducer:
             # Adding the intersection to the meaning, which is prop.ed downward
             meaning = sect
 
-            '''print(*meaning)
-            print("_____")
-            print(*sect)'''
-
             # If commonality has something in it, keep propogating
             if meaning:
-                if node.depth == 1:
-                    print("HEYOOOOOO MOTHAFUCKA")
-                    print(*meaning)
                 self.meaningPush(node.parent, meaning)
 
     def quasiDetermine(self):

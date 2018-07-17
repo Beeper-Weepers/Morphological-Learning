@@ -1,6 +1,6 @@
 from tkinter import filedialog
 import TransducerTree
-import TreeDrawer
+import TreeDrawerGraphviz
 from tkinter import Tk
 
 
@@ -31,7 +31,7 @@ def main():
             trans.addPair(tempPair[0], tempPair[1])
 
     # Output results
-    drawer = TreeDrawer.TreeDrawer()
+    drawer = TreeDrawerGraphviz.TreeDrawer()
     trans.quasiDetermine()
     drawer.drawTree(trans)
 
