@@ -30,9 +30,14 @@ def main():
             tempPair = ln.split("\t")
             trans.addPair(tempPair[0], tempPair[1])
 
-    # Output results
-    drawer = TreeDrawerGraphviz.TreeDrawer()
+    # Quasi-Determinization
     trans.quasiDetermine()
+
+    # Minimization
+    trans.mergeTails()
+
+    # Draw Tree
+    drawer = TreeDrawerGraphviz.TreeDrawer()
     drawer.drawTree(trans)
 
 
