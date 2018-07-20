@@ -111,7 +111,7 @@ class Transducer:
 
     # Recursive function used to populate a list with node segements
     def gatherSegments(self, n, lst):
-        if len(n.functions) >= 2:
+        if len(n.functions) >= 2 or len(n.functions) == 0:
             lst.append(n)
         for f in n.functions:
             self.gatherSegments(f[2], lst)
@@ -128,10 +128,8 @@ class Transducer:
 
             # Congruency check
             for i in range(0, s1FLen):
-                if (s1.functions[i][0] == s2.functions[i][0] and
+                if not (s1.functions[i][0] == s2.functions[i][0] and
                         s1.functions[i][1] == s2.functions[i][1]):
-                    pass
-                else:
                     return False
         else:
             return False
@@ -163,16 +161,18 @@ class Transducer:
             self.gatherSegments(f[2], segmLst)
 
         # Check for trail congruency among segments
-        for s1 in segmLst:
-            for s2 in segmLst:
+        i1Range = range(len(segmLst) - 1)
+        for i1 in i1Range:
+            i2Range = range(i1, len(segmLst))
+            for i2 in i2Range:
+                s1 = segmLst[i1]
+                s2 = segmLst[i2]
                 # Check for congruency
                 if s1 != s2 and self.areCongruent(s1, s2):
                     # Delete one of the branches and reassign functions
                     par = s2.parent
                     self.purgeTails(s2)
-                    for x in range(len(par.functions)):
+                    parRng = range(len(par.functions))
+                    for x in parRng:
                         if par.functions[x][2] == s2:
                             par.functions[x][2] = s1
-                            print(s1.name)
-                            print(s2.name)
-                    return

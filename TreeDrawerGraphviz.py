@@ -16,6 +16,8 @@ class TreeDrawer:
     def propogateNode(self, node, tree):
         if self.isBranch(node, tree):
             self.gra.node(node.name, node.name, shape='doublecircle')
+        elif node == tree.root:
+            self.gra.node(node.name, node.name, shape='octagon')
         else:
             self.gra.node(node.name, node.name, shape='circle')
         self.nodeList.append(node.name)
@@ -31,5 +33,6 @@ class TreeDrawer:
 
     def drawTree(self, tree):
         self.gra.node(tree.root.name, tree.root.name, shape='doubleoctagon')
+        self.nodeShape = 'doubleOctagon'
         self.propogateNode(tree.root, tree)
         self.gra.view()
