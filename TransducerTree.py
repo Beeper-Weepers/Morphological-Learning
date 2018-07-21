@@ -107,12 +107,28 @@ class Transducer:
         for l in self.leaves:
             self.meaningPush(l[2], l[1])
 
+    # MINIMIZATION RELATED
+
     # Merge-Tail Minimization Related
 
     # Recursive function used to populate a list with node segements
+    # Also deletes null morphemes
     def gatherSegments(self, n, lst):
-        if len(n.functions) >= 2 or len(n.functions) == 0:
+        if len(n.functions) >= 2:
             lst.append(n)
+        elif not n.functions:
+            # Check if parent function is null
+            toAppend = n
+            for i in range(len(n.parent.functions)):
+                if (n.parent.functions[i][2] == n and
+                        n.parent.functions[i][0] == "" and
+                        not n.parent.functions[i][1]):
+                    # If so, delete and assign parent to lst
+                    toAppend = n.parent
+                    del n.parent.functions[i]
+                    del n
+            lst.append(toAppend)
+            return
         for f in n.functions:
             self.gatherSegments(f[2], lst)
 
@@ -170,9 +186,24 @@ class Transducer:
                 # Check for congruency
                 if s1 != s2 and self.areCongruent(s1, s2):
                     # Delete one of the branches and reassign functions
-                    par = s2.parent
+                    par = s2.parent  # Unsure about parent stability
                     self.purgeTails(s2)
                     parRng = range(len(par.functions))
                     for x in parRng:
                         if par.functions[x][2] == s2:
                             par.functions[x][2] = s1
+
+    # Introducing morpheme boudaries (node-function minimization)
+
+    def morphemeBoundaries(self, n):
+        for f in n.functions:
+            cur = f[2]
+            while len(cur.functions) == 1:
+                nextCur = cur.functions[0][2]
+                f[0] += cur.functions[0][0]
+                f[2] = nextCur
+                del cur
+                cur = nextCur
+
+        for f in n.functions:
+            self.morphemeBoundaries(f[2])
