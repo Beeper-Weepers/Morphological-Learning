@@ -164,6 +164,7 @@ class Transducer:
         del node
 
     # Productive function used to merge all congruent tails in an FSM
+
     def mergeTails(self):
         # Segment List
         segmLst = []
@@ -190,6 +191,8 @@ class Transducer:
                     self.purgeTails(s2)
                     parRng = range(len(par.functions))
                     for x in parRng:
+                        inst = par.functions[x][2]
+                        del inst
                         if par.functions[x][2] == s2:
                             par.functions[x][2] = s1
 
@@ -207,3 +210,23 @@ class Transducer:
 
         for f in n.functions:
             self.morphemeBoundaries(f[2])
+
+    # Removes accidental or partial overlap in form
+
+    def removeAccOverlap(self, n):
+        for i in range(len(n.functions)):
+            f = n.functions[i]
+            if not f[1] and len(f) == 3:
+                morphBase = f[0]
+
+                # Append child node functions to node
+                for fc in f[2].functions:  # Function child loop
+                    n.functions.insert(0, [morphBase + fc[0], fc[1], fc[2]])
+                    i += 1
+                # Clean up and delete
+                inst = n.functions[i][2]
+                del inst
+                n.functions.pop(i)
+                i -= 1
+        for f in n.functions:
+            self.removeAccOverlap(f[2])
