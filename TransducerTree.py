@@ -1,8 +1,11 @@
+from itertools import combinations
+
+
 class Node:
 
     def __init__(self, par, depth, name):
         self.parent = par
-        self.functions = []  # Consists of tuple (morph, meaning, node)
+        self.functions = []  # Consists of list (morph, meaning, node)
         # TODO: NOW THAT WE HAVE GRAPHVIZ, DEPTH IS OBSOLETE
         self.depth = depth
         self.name = name
@@ -180,7 +183,7 @@ class Transducer:
         # Check for trail congruency among segments
         i1Range = range(len(segmLst) - 1)
         for i1 in i1Range:
-            i2Range = range(i1, len(segmLst))
+            i2Range = range(i1 + 1, len(segmLst))  # Look into it self checking
             for i2 in i2Range:
                 s1 = segmLst[i1]
                 s2 = segmLst[i2]
@@ -214,9 +217,11 @@ class Transducer:
     # Removes accidental or partial overlap in form
 
     def removeAccOverlap(self, n):
+        merged = False
         for i in range(len(n.functions)):
             f = n.functions[i]
-            if not f[1] and len(f) == 3:
+            if not f[1]:
+                merged = True
                 morphBase = f[0]
 
                 # Append child node functions to node
@@ -228,5 +233,78 @@ class Transducer:
                 del inst
                 n.functions.pop(i)
                 i -= 1
-        for f in n.functions:
-            self.removeAccOverlap(f[2])
+        if merged:
+            self.removeAccOverlap(n)
+        else:
+            for f in n.functions:
+                self.removeAccOverlap(f[2])
+
+    # Modified prefix-segmenting quasi-determination
+
+    def findIntersection(strList):
+        maxRange = range(len(min(strList, key=len)))
+        for i in maxRange:
+            if not all(st[i] == strList[0][i] for st in strList):
+                break
+        return i
+
+    # Main function of prefix segmenting
+
+    def prefixDetermine(self):
+        # TODO: Have process to simultaneously intersect morphemes and meanings
+        # AKA for each meaning (and or set) collect a morpheme intersect
+
+        # Meaning grouping
+
+        meaningLst = []  # each item in format [[INTSEC], [FUNCS], [POSITIONS]]
+
+        funcSz = len(self.root.functions)
+        rtfs = self.root.functions
+        # Function comparison level (over all functions in root)
+        for f1 in range(0, funcSz - 1):
+
+            # Get meaning combinations (may be bad because iterable conversion)
+            meanCombs = []  # Meaning combinations
+            meanLast = len(rtfs[f1][1])
+            for x in range(meanLast, 0, -1):
+                tempCombos = combinations(rtfs[f1][1], x)
+                for y in tempCombos:
+                    meanCombs.append(list(y))
+
+            for f2 in range(f1 + 1, funcSz):
+                for m in meanCombs:
+                    poses = []
+                    # Subset check
+                    comboSz = 0
+                    for m1 in m:
+                        comboSz += 1
+                        for m2 in range(0, len(rtfs[f2][1])):
+                            if m1 == rtfs[f2][1][m2]:
+                                poses.append(m2)
+                                break
+                    # Checking if the subset exists and then deletion
+                    if comboSz == len(poses):
+                        # Check if this intersection is in [x][1] of meaningLst
+                        found = False
+                        for x in meaningLst:
+                            if m == x[0]:
+                                x[1].append(f2)
+                                x[2].append(poses)
+                                found = True
+                        # If not, create a new intersection category
+                        if not found:
+                            meaningLst.append([m, [rtfs[f1][0], rtfs[f2][0]],
+                                              [poses]])
+                            # Adding meaning positions in f1 to meaningLst pos'
+                            meaningLst[-1][2].append([])
+                            for x in m:
+                                meaningLst[-1][2][-1].append(rtfs[f1][1].index(
+                                                            x))
+        print(*meaningLst)
+
+        # Morpheme extraction based on meaning
+
+        for group in meaningLst:
+            pass
+
+        pass

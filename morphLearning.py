@@ -37,6 +37,7 @@ def main():
     trans.mergeTails()
     trans.morphemeBoundaries(trans.root)
     trans.removeAccOverlap(trans.root)
+    trans.prefixDetermine()
 
     # Draw Tree
     drawer = TreeDrawerGraphviz.TreeDrawer()
