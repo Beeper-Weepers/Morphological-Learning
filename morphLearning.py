@@ -34,10 +34,11 @@ def main():
     trans.quasiDetermine()
 
     # Minimization
-    trans.mergeTails()
-    trans.morphemeBoundaries(trans.root)
-    trans.removeAccOverlap(trans.root)
-    trans.prefixDetermine()
+    trans.mergeTailsParadigms()
+    # trans.morphemeBoundariesParadigms(trans.root)
+    # trans.removeAccOverlapParadigms(trans.root)
+
+    trans.mergeParadigms()
 
     # Draw Tree
     drawer = TreeDrawerGraphviz.TreeDrawer()

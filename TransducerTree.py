@@ -1,6 +1,3 @@
-from itertools import combinations
-
-
 class Node:
 
     def __init__(self, par, depth, name):
@@ -31,6 +28,8 @@ class Transducer:
         self.count = 0
         self.root = Node(None, 0, str(self.count))
         self.count += 1  # For the root node
+        self.paradigms = []
+        self.paradigmsMeaning = []
 
     # Used to find the [2] portion of a node func. where [0] and [1] are known
     def findMatchingNode(self, morpheme, list):
@@ -41,7 +40,20 @@ class Transducer:
 
     # Productive simple p.-subseq. construction function
     def addPair(self, word, meaning):
-        prevNode = self.root
+        prevNode = None
+
+        # Look up in paradigmsMeaning for parent node, if not make new entries
+        try:
+            parIndx = self.paradigmsMeaning.index(meaning)
+            prevNode = self.paradigms[parIndx]
+        except ValueError:
+            prevNode = Node(prevNode, 0, str(self.count))
+            self.count += 1
+            self.paradigms.append(prevNode)
+            # Appends an upper meaning to the paradigm list
+            for m in meaning:
+                if m.isupper():  # All meaning sets must contain one upper mean
+                    self.paradigmsMeaning.append(m)
 
         # Reserve a list that is used for comparison
         childrenList = prevNode.functions
@@ -160,6 +172,7 @@ class Transducer:
 
         return True
 
+    # Resursive "chain reaction" deletion of nodes
     def purgeTails(self, node):
         for f in node.functions:
             self.purgeTails(f[2])
@@ -168,13 +181,13 @@ class Transducer:
 
     # Productive function used to merge all congruent tails in an FSM
 
-    def mergeTails(self):
+    def mergeTails(self, curN):
         # Segment List
         segmLst = []
 
         # Gather all the segmenting nodes (besides the first one)
-        curN = self.root
         while len(curN.functions) < 2:
+            print(curN.functions)
             curN = curN.functions[0][2]
 
         for f in curN.functions:
@@ -199,6 +212,11 @@ class Transducer:
                         if par.functions[x][2] == s2:
                             par.functions[x][2] = s1
 
+    def mergeTailsParadigms(self):
+        for p in self.paradigms:
+            self.mergeTails(p)
+        pass
+
     # Introducing morpheme boudaries (node-function minimization)
 
     def morphemeBoundaries(self, n):
@@ -213,6 +231,10 @@ class Transducer:
 
         for f in n.functions:
             self.morphemeBoundaries(f[2])
+
+    def morphemeBoundariesParadigms(self):
+        for p in self.paradigms:
+            self.morphemeBoundaries(p)
 
     # Removes accidental or partial overlap in form
 
@@ -239,112 +261,13 @@ class Transducer:
             for f in n.functions:
                 self.removeAccOverlap(f[2])
 
-    # Modified prefix-segmenting quasi-determination
+    def removeAccOverlapParadigms(self):
+        for p in self.paradigms:
+            self.removeAccOverlap(p)
 
-    # Helper function to assist with morpheme intersections
+    # Merges the paradigms onto the root to keep them separate
 
-    def findIntersection(self, strList):
-        maxRange = range(len(min(strList, key=len)))
-        for i in maxRange:
-            if not all(st[i] == strList[0][i] for st in strList):
-                return i - 1
-        return i
-
-    # Main function of prefix segmenting
-
-    def prefixDetermine(self):
-
-        # Meaning grouping
-
-        meaningLst = []  # each item in format [[INTSEC], [FUNCS], [POSITIONS]]
-
-        funcSz = len(self.root.functions)
-        rtfs = self.root.functions
-        # Function comparison level (over all functions in root)
-        for f1 in range(0, funcSz - 1):
-
-            # Get meaning combinations (may be bad because iterable conversion)
-            meanCombs = []  # Meaning combinations
-            meanLast = len(rtfs[f1][1])
-            for x in range(meanLast, 0, -1):
-                tempCombos = combinations(rtfs[f1][1], x)
-                for y in tempCombos:
-                    meanCombs.append(list(y))
-
-            for f2 in range(f1 + 1, funcSz):
-                for m in meanCombs:
-
-                    # Checking if the meaning + f2 already exists in an item
-                    alreadyPres = False
-                    for tI in meaningLst:
-                        if tI[0] == m and rtfs[f2] in tI[1]:
-                            alreadyPres = True
-                            break
-                    if alreadyPres:
-                        continue
-
-                    poses = []
-                    # Subset check
-                    comboSz = 0
-                    for m1 in m:
-                        comboSz += 1
-                        for m2 in range(0, len(rtfs[f2][1])):
-                            if m1 == rtfs[f2][1][m2]:
-                                poses.append(m2)
-                                break
-                    # Checking if the subset exists and then deletion
-                    if comboSz == len(poses):
-                        # Check if this intersection is in [x][1] of meaningLst
-                        found = False
-                        for x in meaningLst:
-                            if m == x[0]:
-                                x[1].append(rtfs[f2])
-                                found = True
-                                break
-                        # If not, create a new intersection category
-                        if not found:
-                            meaningLst.append([m, [rtfs[f1], rtfs[f2]]])
-
-        # print(*meaningLst)
-
-        # Morpheme extraction based on meaning
-
-        for group in meaningLst:
-            # Build a "basket" for morphemes and then a basket for rt functions
-            morphLst = []
-            for s in group[1]:
-                morphLst.append(s[0])
-
-            # Grab an intersection
-            intersectIndex = self.findIntersection(morphLst) + 1
-
-            # If no intersection, don't do anything
-            if intersectIndex == 0:
-                continue
-
-            # Create new node
-            nde = Node(self.root, 1, str(self.count))
-            self.count += 1
-
-            # Give node new functions
-            for func in group[1]:
-                for meaning in group[0]:
-                    func[1].remove(meaning)
-                nde.addFunction(func[0][intersectIndex:], func[1], func[2])
-
-            # Delete old nodes from root
-            fI = 0
-            while fI < len(rtfs):
-                try:
-                    fun = rtfs[fI]
-                    val = group[1].index(fun)
-                    del rtfs[fI]
-                    del group[1][val]
-                except ValueError:
-                    fI += 1
-                    pass
-
-            # Connect the new node to the root
-            self.root.addFunction(morphLst[0][:intersectIndex], group[0], nde)
-
-        pass
+    def mergeParadigms(self):
+        for n in self.paradigms:
+            self.root.functions.extend(n.functions)
+            del n
