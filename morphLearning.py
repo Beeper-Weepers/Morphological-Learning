@@ -33,12 +33,13 @@ def main():
     # Quasi-Determinization
     trans.quasiDetermine()
 
-    # Minimization
-    trans.mergeTailsParadigms()
-    # trans.morphemeBoundariesParadigms(trans.root)
-    # trans.removeAccOverlapParadigms(trans.root)
-
+    # Merge paradigms (Hay wrapper functions for performing min procs on paras)
     trans.mergeParadigms()
+
+    # Minimization
+    trans.mergeTails(trans.root)
+    trans.morphemeBoundaries(trans.root)
+    trans.removeAccOverlap(trans.root)
 
     # Draw Tree
     drawer = TreeDrawerGraphviz.TreeDrawer()

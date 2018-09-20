@@ -44,16 +44,17 @@ class Transducer:
 
         # Look up in paradigmsMeaning for parent node, if not make new entries
         try:
-            parIndx = self.paradigmsMeaning.index(meaning)
+            # Find core meaning
+            splitMeanings = meaning.split(";")
+            coreMeaning = splitMeanings[0]
+
+            parIndx = self.paradigmsMeaning.index(coreMeaning)
             prevNode = self.paradigms[parIndx]
         except ValueError:
             prevNode = Node(prevNode, 0, str(self.count))
             self.count += 1
             self.paradigms.append(prevNode)
-            # Appends an upper meaning to the paradigm list
-            for m in meaning:
-                if m.isupper():  # All meaning sets must contain one upper mean
-                    self.paradigmsMeaning.append(m)
+            self.paradigmsMeaning.append(coreMeaning)
 
         # Reserve a list that is used for comparison
         childrenList = prevNode.functions
